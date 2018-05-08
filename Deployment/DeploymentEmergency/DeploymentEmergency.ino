@@ -148,7 +148,7 @@ void Alarm() {
       Message = "I need Help! Google Maps - https://www.google.co.in/maps/place/" + Message1 + "," + Message2;
       Terminal.print("Message Sent");
 
-      SMS.send("0954852070", Message);
+      SMS.send("0846371854", Message);
     }
 
     Alarm();
