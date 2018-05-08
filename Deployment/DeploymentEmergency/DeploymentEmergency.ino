@@ -27,7 +27,12 @@
 /* Define a boolean flag. */
 long UltraSensor, UltraSensorTwo;
 unsigned long previousMillis = 0;
-unsigned long interval = 500;
+unsigned long interval = 250;
+
+unsigned long previousMillisAlarm = 0;
+unsigned long intervalAlarm = 3000;
+boolean alarmReset = false;
+
 float lat;
 float lon;
 String Message;
@@ -40,7 +45,6 @@ char longitude[10];
 void setup()
 {
   /* Start communication.*/
-  Serial.begin(9600);
   OneSheeld.begin();
 
   pinMode(trigPin1, OUTPUT);
@@ -67,10 +71,10 @@ long SonarSensor(int trigPin, int echoPin)
 
 void triggerSensor(int motorPin, long lSensorDistInCm, long lMaxDistInCm, char* sMsg)
 {
-  int iTimeToDelayInMs = 100 * (lMaxDistInCm/lSensorDistInCm) * (lMaxDistInCm / lSensorDistInCm); // 60 cm -- 50 ms, 30 cm -- 200 ms
-  if(iTimeToDelayInMs > 1000) iTimeToDelayInMs = 1000; 
+  int iTimeToDelayInMs = 100 * (lMaxDistInCm / lSensorDistInCm) * (lMaxDistInCm / lSensorDistInCm); // 60 cm -- 50 ms, 30 cm -- 200 ms
+  if (iTimeToDelayInMs > 1000) iTimeToDelayInMs = 1000;
 
-  if(lSensorDistInCm <= lMaxDistInCm) // cm
+  if (lSensorDistInCm <= lMaxDistInCm) // cm
   {
     digitalWrite(motorPin, HIGH); // motor on
     delay(iTimeToDelayInMs);
@@ -79,13 +83,13 @@ void triggerSensor(int motorPin, long lSensorDistInCm, long lMaxDistInCm, char* 
   }
   else
   {
-      digitalWrite(motorPin, LOW);
+    digitalWrite(motorPin, LOW);
   }
-//  Terminal.print(sMsg);
-//  Terminal.print(lDist);
-//  Terminal.print("cm, delay: ");
-//  Terminal.print(iTimeToDelayInMs);
-//  Terminal.println("ms.");
+  //  Terminal.print(sMsg);
+  //  Terminal.print(lDist);
+  //  Terminal.print("cm, delay: ");
+  //  Terminal.print(iTimeToDelayInMs);
+  //  Terminal.println("ms.");
 }
 
 void SensorHandler() {
@@ -99,25 +103,53 @@ void SensorHandler() {
   triggerSensor(motorPin2, lSensorDist2InCm, lMaxDistInCm, "Sensor2: ");
 }
 
-void loop()
-{
-  unsigned long currentMillis = millis();
-  if (currentMillis - previousMillis > interval) 
-  {
-    previousMillis = currentMillis;
-    SensorHandler();
-  }
-  if (PushButton.isPressed())
-  {
-    Terminal.println("Button Pressed");
-    lat = GPS.getLatitude();
-    lon = GPS.getLongitude();
-    Message1 = String(lat, 8);
-    Message2 = String(lon, 8);
+void Alarm() {
+  int ledPin = 8;
+  int piezoPin = 8;
+  unsigned long currentMillisAlarm = millis();
 
-    Message = "I need Help! Google Maps - https://www.google.co.in/maps/place/" + Message1 + "," + Message2;
-    Terminal.print("Message Sent");
+  if (currentMillisAlarm - previousMillisAlarm > intervalAlarm)
+  {
+    previousMillisAlarm = currentMillisAlarm;
 
-    SMS.send("0954852070",Message);
+    if (OneSheeld.isAppConnected())
+    {
+      if(true)
+      {
+      digitalWrite(ledPin, LOW);
+      //tone(piezoPin, 0, 0);
+      alarmReset = true;
+      }
+    }
+    else {
+      digitalWrite(ledPin, HIGH);
+      tone(piezoPin, 10000, 500);
+      delay(1000);
+      alarmReset = false;
+    }
   }
 }
+ void loop()
+  {
+    unsigned long currentMillis = millis();
+    if (currentMillis - previousMillis > interval)
+    {
+      previousMillis = currentMillis;
+      SensorHandler();
+    }
+    if (PushButton.isPressed())
+    {
+      Terminal.println("Button Pressed");
+      lat = GPS.getLatitude();
+      lon = GPS.getLongitude();
+      Message1 = String(lat, 8);
+      Message2 = String(lon, 8);
+
+      Message = "I need Help! Google Maps - https://www.google.co.in/maps/place/" + Message1 + "," + Message2;
+      Terminal.print("Message Sent");
+
+      SMS.send("0954852070", Message);
+    }
+
+    Alarm();
+  }
