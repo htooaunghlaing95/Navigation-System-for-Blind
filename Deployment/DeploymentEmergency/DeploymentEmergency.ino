@@ -1,4 +1,4 @@
-#define CUSTOM_SETTINGS
+  #define CUSTOM_SETTINGS
 #define INCLUDE_GPS_SHIELD
 #define INCLUDE_SMS_SHIELD
 #define INCLUDE_VIBRATION_SHIELD
@@ -123,7 +123,7 @@ void Alarm() {
     }
     else {
       digitalWrite(ledPin, HIGH);
-      tone(piezoPin, 10000, 500);
+      tone(piezoPin, 12500, 500);
       delay(1000);
       alarmReset = false;
     }
